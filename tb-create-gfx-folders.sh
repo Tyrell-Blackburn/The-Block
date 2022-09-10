@@ -26,7 +26,7 @@ function createImportSubFolders {
 
   mkdir "$series"_EP"$1"_GFX
   cd "$series"_EP"$1"_GFX
-  mkdir "$series"_EP"$1"_GFX_FLOOR_PLANS	
+  mkdir "$series"_EP"$1"_GFX_FLOOR_PLANS
   mkdir "$series"_EP"$1"_GFX_LINE_DRAWINGS
   cd ..
 
