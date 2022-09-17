@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# A script used to automatically create the folder structures used in the TV Show The Block
+# A script used to automatically create the nearline gfx folders for The Block
 
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
