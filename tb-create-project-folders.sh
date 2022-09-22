@@ -1,35 +1,125 @@
 #!/bin/bash
 
-# A script used to automatically create Avid project folders
+# A script used to automatically create Avid projects based on a template folder
 
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
-# How unique bins are are created within new projects
+printf "%s\n\n" "Welcome to The Block create projects script"
+printf "%s\n" "This script will create projects with \"unique\" bins so you won't get the \"Unable to open bin\" error message."
+printf "%s\n" "Bins that contain content you want copied over to each project, prepend their name with \"unique_\""
+printf "%s\n" "Before continuing, make sure you've customised the project template folder the way you want it in /Project-template."
 
-# When a new project is created from the template, the bins created will either be duplicates from the template, or they will be new bins.
-# 1) Duplicate bins should be named with "duplicate_" at the front of the bin name so the script can identify them.
-#	 These bins should contain content that you want to duplicate over every project. These bins cannot be opened over multiple projects at the same time or you will get the get the "Unable to open bin" error message.
-#	 A prime example of a unique bin would be a "timecode" bin that contains a timecode layer you want editors to use across projects for consistency.
-# 2) Bins that don't start with "duplicate_" will be recreated as a unique bins, and should be empty placeholder bins for a project.
-#	 A typical example would be a "completed_requests" bin that edit assist drop requests into, or "outgoing GFX" bins that editors drop reference sequences into.
-#	 Unique bins are technically not unique, but rather copied across to new project folders from a pool of unique bins in the "bins" folder.
-#	 This folder should be populated by unique bins created in AVID.
-#	 The way the script works is that when a new project folder is created, unique bins are taken one-by-one from the pool of bins like a queue, and renamed to what they should be based on the episode template.
-#	 For example, if each project contains 10 bins. The episode 1 project will take bins 1 to 10, episode 2 will take bins 11 to 20 and so forth.
-#	 For reference, every TB18 project contains XX unique bins, which would mean over 50 episodes you'd need XXX unique bins in the bins folder for every project to have unique bins.
-
-
-
-
-echo "Welcome to The Block create projects script"
-echo "This script will create projects with \"unique\" bins so you won't get the \"Unable to open bin\" error message."
-echo "Before continuing, make sure you've customised the project template folder the way you want it in /Project-template."
-echo "Bins that contain content you want copied over to each project, prepend their name with \"unique_\""
+# pat='[^0-9]+([0-9]+)'
+# s='I am a string with some digits 1024'
+# [[ $s =~ $pat ]] # $pat must be unquoted
+# echo "${BASH_REMATCH[0]}"
+# echo "${BASH_REMATCH[1]}"
 
 production=TB
 seriesnumber=19
 episodes=1
+
+# add warning if not enough bins for unique bins. If not enough unique bins then they will be reused
+
+# create folder for episode folders
+mkdir "$production""$seriesnumber"_PROJECTS
+basedir="./$production""$seriesnumber"_PROJECTS
+
+
+# This creates the folder structure of an episode
+function createProjects {
+
+	# isolate the path by truncating ./episode-template
+	originalPath="$1"
+	[[ $originalPath =~ \.\/episode\-template(.*) ]]
+
+	# truncated path
+	truncOriginalPath=${BASH_REMATCH[1]}
+	echo "original path: "$1"" # print original path
+	echo "truncated original path: "$truncOriginalPath"" # print truncated original path
+
+	# building the destination path
+	destPath=""$4""${BASH_REMATCH[1]}""
+	echo "dest path: "$destPath"" # print new destination path
+
+	# operations if path is a file
+	if [ -f "$1" ] ; then
+		printf "%s\n\n" "is a file do nothing"
+	fi
+
+	# operations if path is a directory
+	if [ -d "$1" ] ; then
+		printf "%s\n\n" "is a directory - so copy directory"
+				
+
+		mkdir -p -v "$truncOriginalPath" "$destPath"
+		# cp -r "$1" "$destPath"
+	fi
+
+# split input string into an array with '/' as delimiter
+
+}
+
+# not sure why we need to export the function but this is necessary when using it with "find"
+export -f createProjects
+
+for (( i=1; i <= episodes; i++ )) do
+
+	# Adds a zero in front of episodes that are less than episode 10
+	if [ "$i" -lt 10 ]; then
+    	currentEpisode=0"$i"
+	else
+		currentEpisode="$i"
+	fi
+
+	# notification creating episodes
+	printf "%s\n\n" "Creating Episode $currentEpisode folders"
+	destRootFolder="$basedir"/"$production""$seriesnumber"_EPISODE_"$currentEpisode"
+	
+	# traverses the episode template and each result is fed into "createProjects"
+	# Important it's written this way because of end of part 6 here http://mywiki.wooledge.org/UsingFind
+	find ./episode-template -exec bash -c 'createProjects $1 $2 $3 $4' _ {} "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
+	
+done
+
+
+# find ./episode-template -exec sh -c
+# for thing do
+# 	cp thing ./dest
+# done
+
+
+# find ./episode-template -exec sh -c
+# if [ {} == type -d ]
+# then
+# 	cp {} ./dest
+# done
+# fi \;
+
+
+# mkdir ./dest
+
+# find ./episode-template -print0 | xargs -0 -I {} cp {} ./dest
+
+# for file in *
+# do
+# 	echo $file
+# done
+
+# find ./episode-template -print0 | while IFS= read -r -d $'\0' file; 
+#   do echo "$file" ;
+# done
+
+
+# find ./episode-template
+
+
+
+
+
+##### TEMPORARY CODE #####
+
 
 # code to check variable name. Want to use this for switch statement to check input
 
@@ -76,61 +166,3 @@ episodes=1
 # do
 # 	read -rp "Enter a 'y' or 'n' only: " continuescript
 # done
-
-
-
-
-mkdir ./"$production""$seriesnumber"_PROJECTS
-
-
-
-# function createprojects {
-#     echo "$1" "$2" "$3"
-
-# # split input string into an array with '/' as delimiter
-
-
-# }
-
-# export -f createprojects
-
-# for (( i=1; i <= episodes; i++ ))
-# do
-# 	echo "$i"
-# 	find ./episode-template -exec bash -c 'createprojects "{}" "$seriesnumber" "$i"' \;
-# done
-
-
-
-
-# find ./episode-template -exec sh -c
-# for thing do
-# 	cp thing ./dest
-# done
-
-
-# find ./episode-template -exec sh -c
-# if [ {} == type -d ]
-# then
-# 	cp {} ./dest
-# done
-# fi \;
-
-
-# mkdir ./dest
-
-# find ./episode-template -print0 | xargs -0 -I {} cp {} ./dest
-
-# for file in *
-# do
-# 	echo $file
-# done
-
-# find ./episode-template -print0 | while IFS= read -r -d $'\0' file; 
-#   do echo "$file" ;
-# done
-
-
-# find ./episode-template
-
-# Examine the folder structure with a breadth depth first approach. 
