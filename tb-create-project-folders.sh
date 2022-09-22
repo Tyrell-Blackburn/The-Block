@@ -32,7 +32,7 @@ function createProjects {
 
 	# isolate the path by truncating ./episode-template
 	originalPath="$1"
-	[[ $originalPath =~ \.\/episode\-template(.*) ]]
+	[[ $originalPath =~ \.\/episode-template(.*) ]] # a match is stored in BASH_REMATCH
 
 	# truncated path
 	truncOriginalPath=${BASH_REMATCH[1]}
@@ -41,7 +41,11 @@ function createProjects {
 
 	# building the destination path
 	destPath=""$4""${BASH_REMATCH[1]}""
-	echo "dest path: "$destPath"" # print new destination path
+	echo "dest path: $destPath" # print new destination path
+
+	# default Input Field Separators are white space, new line, and tab. This removes white space so files and folders can be handled without globbing and word-splitting. 
+	# IFS="$(printf '\n\t')"
+	IFS=$'\n'
 
 	# operations if path is a file
 	if [ -f "$1" ] ; then
@@ -50,10 +54,10 @@ function createProjects {
 
 	# operations if path is a directory
 	if [ -d "$1" ] ; then
-		printf "%s\n\n" "is a directory - so copy directory"
+		printf "%s\n" "is a directory - so copy directory"
 				
-
-		mkdir -p -v "$truncOriginalPath" "$destPath"
+		echo "from original path : $originalPath to dest path: $destPath" # print new destination path
+		mkdir -p -v "$originalPath" "$destPath"
 		# cp -r "$1" "$destPath"
 	fi
 
@@ -79,8 +83,8 @@ for (( i=1; i <= episodes; i++ )) do
 	
 	# traverses the episode template and each result is fed into "createProjects"
 	# Important it's written this way because of end of part 6 here http://mywiki.wooledge.org/UsingFind
-	find ./episode-template -exec bash -c 'createProjects $1 $2 $3 $4' _ {} "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
-	
+	# find ./episode-template -exec bash -c 'createProjects $1 $2 $3 $4' _ "{}" "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
+	find ./episode-template -exec bash -c 'createProjects "$1" $2 $3 $4' _ "{}" "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
 done
 
 
