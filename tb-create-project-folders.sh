@@ -30,22 +30,49 @@ basedir="./$production""$seriesnumber"_PROJECTS
 # This creates the folder structure of an episode
 function createProjects {
 
-	# isolate the path by truncating ./episode-template
-	originalPath="$1"
-	[[ $originalPath =~ \.\/episode-template(.*) ]] # a match is stored in BASH_REMATCH
+	# "$1" - {} - Path created by 'find' - ./episode-template/!!!*prod*series_EP*episode_SCREENINGS
+	# "$2" - $seriesnumber - 19
+	# "$3" - $currentEpisode - 01
+	# "$4" - $production - TB
+	# "$5" - $destRootFolder - ./TB19_PROJECTS/TB19_EPISODE_01
 
-	# truncated path
+	echo "Path: $1" # print original path
+	echo "Series Number: $2" # print series number
+	echo "Current Episode: $3" # print current episode
+	echo "Production: $4" # prints production
+	echo "Destination Path: $5" # prints root destination
+
+	# isolate the path by truncating ./episode-template
+	originalPath="$1" # ./episode-template/01_*prod*...
+
+	# truncate original path
+	# from this /// ./episode-template/01_*prod...
+	# to this 	/// /01_*prod*... /// to this
+	[[ $originalPath =~ \.\/episode-template(.*) ]] # a match is stored in BASH_REMATCH
 	truncOriginalPath=${BASH_REMATCH[1]}
-	echo "original path: "$1"" # print original path
-	echo "truncated original path: "$truncOriginalPath"" # print truncated original path
+	# this can be simplified as
+	# TrunOriginalPath=${$1:19} Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+	echo "truncated original path: $truncOriginalPath" # print truncated original path
+
+	# run path through naming subsitution function
+	# If pattern begins with ‘/’, all matches of pattern are replaced with string. Normally only the first match is replaced.
+	# If the nocasematch shell option (see the description of shopt in The Shopt Builtin) is enabled, the match is performed without regard to the case of alphabetic characters
+	truncOriginalPath="${truncOriginalPath//\*series/$2}"
+	truncOriginalPath="${truncOriginalPath//\*episode/$3}"
+	truncOriginalPath="${truncOriginalPath//\*prod/$4}"
+	# truncOriginalPath=${truncOriginalPath/"*series"/"$seriesnumber"}
+	# test=${test/"*episode"/"$seriesnumber"}
+	# echo "$test"
+
+	echo "text replaced original path: $truncOriginalPath"
+
 
 	# building the destination path
-	destPath=""$4""${BASH_REMATCH[1]}""
+	destPath=""$5""$truncOriginalPath""
 	echo "dest path: $destPath" # print new destination path
 
-	# default Input Field Separators are white space, new line, and tab. This removes white space so files and folders can be handled without globbing and word-splitting. 
-	# IFS="$(printf '\n\t')"
-	IFS=$'\n'
+
+
 
 	# operations if path is a file
 	if [ -f "$1" ] ; then
@@ -55,10 +82,10 @@ function createProjects {
 	# operations if path is a directory
 	if [ -d "$1" ] ; then
 		printf "%s\n" "is a directory - so copy directory"
-				
+		
 		echo "from original path : $originalPath to dest path: $destPath" # print new destination path
+
 		mkdir -p -v "$originalPath" "$destPath"
-		# cp -r "$1" "$destPath"
 	fi
 
 # split input string into an array with '/' as delimiter
@@ -83,8 +110,7 @@ for (( i=1; i <= episodes; i++ )) do
 	
 	# traverses the episode template and each result is fed into "createProjects"
 	# Important it's written this way because of end of part 6 here http://mywiki.wooledge.org/UsingFind
-	# find ./episode-template -exec bash -c 'createProjects $1 $2 $3 $4' _ "{}" "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
-	find ./episode-template -exec bash -c 'createProjects "$1" $2 $3 $4' _ "{}" "$seriesnumber" "$currentEpisode" "$destRootFolder" \; # this doesn't work
+	find ./episode-template -exec bash -c 'createProjects "$1" "$2" "$3" "$4" "$5"' _ {} "$seriesnumber" "$currentEpisode" "$production" "$destRootFolder" \;
 done
 
 
