@@ -5,27 +5,31 @@
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
-printf "%s\n\n" "Welcome to The Block create projects script"
-printf "%s\n" "This script will create projects with \"unique\" bins so you won't get the \"Unable to open bin\" error message."
-printf "%s\n" "Bins that contain content you want copied over to each project, prepend their name with \"unique_\""
-printf "%s\n" "Before continuing, make sure you've customised the project template folder the way you want it in /Project-template."
+oneLine="%s\n" # one line regex pattern
 
-# pat='[^0-9]+([0-9]+)'
-# s='I am a string with some digits 1024'
-# [[ $s =~ $pat ]] # $pat must be unquoted
-# echo "${BASH_REMATCH[0]}"
-# echo "${BASH_REMATCH[1]}"
+printf "%s\n\n" "Welcome to The Block create projects script"
+printf "$oneLine" "This script will create projects with \"unique\" bins so you won't get the \"Unable to open bin\" error message." \
+"Bins that contain content you want copied over to each project, music be prepended with \"*unique\"" \
+"Before continuing, make sure you've customised the project template folder the way you want it in /Project-template."
 
 production=TB
 seriesnumber=19
-episodes=1
+episodes=15
+
 
 # add warning if not enough bins for unique bins. If not enough unique bins then they will be reused
 
 # create folder for episode folders
 mkdir "$production""$seriesnumber"_PROJECTS
-basedir="./$production""$seriesnumber"_PROJECTS
+basedir=./"$production""$seriesnumber"_PROJECTS
 
+# function to rename paths with the variables
+# currently not being used
+function renamePath {
+	truncOriginalPath="${truncOriginalPath//\*series/$2}" # replace series
+	truncOriginalPath="${truncOriginalPath//\*episode/$3}" # replace episode
+	truncOriginalPath="${truncOriginalPath//\*prod/$4}" # replace production
+}
 
 # This creates the folder structure of an episode
 function createProjects {
@@ -36,60 +40,55 @@ function createProjects {
 	# "$4" - $production - TB
 	# "$5" - $destRootFolder - ./TB19_PROJECTS/TB19_EPISODE_01
 
-	echo "Path: $1" # print original path
-	echo "Series Number: $2" # print series number
-	echo "Current Episode: $3" # print current episode
-	echo "Production: $4" # prints production
-	echo "Destination Path: $5" # prints root destination
+	# original source path
+	originalPath="$1"
 
-	# isolate the path by truncating ./episode-template
-	originalPath="$1" # ./episode-template/01_*prod*...
+	printf "Source Path:\t%s\n" "$originalPath" # print original path
+	# echo "Series Number: $2" # print series number
+	# echo "Current Episode: $3" # print current episode
+	# echo "Production: $4" # prints production
+	# printf "Dest Path:\t%s\n" "$5" # prints root destination
 
-	# truncate original path
-	# from this /// ./episode-template/01_*prod...
-	# to this 	/// /01_*prod*... /// to this
-	[[ $originalPath =~ \.\/episode-template(.*) ]] # a match is stored in BASH_REMATCH
+	# truncate original path to remove the leading ./episode-template/01_*prod...
+	[[ $originalPath =~ \.\/episode-template(.*) ]] # match stored in BASH_REMATCH
 	truncOriginalPath=${BASH_REMATCH[1]}
 	# this can be simplified as
 	# TrunOriginalPath=${$1:19} Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
-	echo "truncated original path: $truncOriginalPath" # print truncated original path
 
-	# run path through naming subsitution function
-	# If pattern begins with ‘/’, all matches of pattern are replaced with string. Normally only the first match is replaced.
+	# run path through pattern replacement
+	# "${source/findPattern/replaceWith}" # replace first occurance
+	# "${source//findPattern/replaceWith}" # replace all occurances
+	# If pattern begins with ‘/’, all matches of pattern are replaced.
 	# If the nocasematch shell option (see the description of shopt in The Shopt Builtin) is enabled, the match is performed without regard to the case of alphabetic characters
-	truncOriginalPath="${truncOriginalPath//\*series/$2}"
-	truncOriginalPath="${truncOriginalPath//\*episode/$3}"
-	truncOriginalPath="${truncOriginalPath//\*prod/$4}"
+	# More info on pattern matching https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+	truncOriginalPath="${truncOriginalPath//\*series/$2}" # replace series
+	truncOriginalPath="${truncOriginalPath//\*episode/$3}" # replace episode
+	truncOriginalPath="${truncOriginalPath//\*prod/$4}" # replace production
 	# truncOriginalPath=${truncOriginalPath/"*series"/"$seriesnumber"}
 	# test=${test/"*episode"/"$seriesnumber"}
 	# echo "$test"
 
-	echo "text replaced original path: $truncOriginalPath"
-
 
 	# building the destination path
-	destPath=""$5""$truncOriginalPath""
-	echo "dest path: $destPath" # print new destination path
-
-
-
+	destPath="$5""$truncOriginalPath"
+	printf "Dest Path:\t%s\n" "$destPath" # prints root destination
 
 	# operations if path is a file
 	if [ -f "$1" ] ; then
-		printf "%s\n\n" "is a file do nothing"
+		printf "%s\n\n" "copying file"
+		echo "copy source: $1"
+		echo "copy destin: $destPath"
+		cp "$1" "$destPath"
+
+#  cp example.txt ~/Documents/file.txt
+
 	fi
 
 	# operations if path is a directory
 	if [ -d "$1" ] ; then
-		printf "%s\n" "is a directory - so copy directory"
-		
-		echo "from original path : $originalPath to dest path: $destPath" # print new destination path
-
+		printf "%s\n\n" "copying directory"
 		mkdir -p -v "$originalPath" "$destPath"
 	fi
-
-# split input string into an array with '/' as delimiter
-
 }
 
 # not sure why we need to export the function but this is necessary when using it with "find"
@@ -106,7 +105,7 @@ for (( i=1; i <= episodes; i++ )) do
 
 	# notification creating episodes
 	printf "%s\n\n" "Creating Episode $currentEpisode folders"
-	destRootFolder="$basedir"/"$production""$seriesnumber"_EPISODE_"$currentEpisode"
+	destRootFolder="$basedir"/"$production""$seriesnumber"_EP"$currentEpisode"
 	
 	# traverses the episode template and each result is fed into "createProjects"
 	# Important it's written this way because of end of part 6 here http://mywiki.wooledge.org/UsingFind
@@ -196,3 +195,9 @@ done
 # do
 # 	read -rp "Enter a 'y' or 'n' only: " continuescript
 # done
+
+# pat='[^0-9]+([0-9]+)'
+# s='I am a string with some digits 1024'
+# [[ $s =~ $pat ]] # $pat must be unquoted
+# echo "${BASH_REMATCH[0]}" # The full string
+# echo "${BASH_REMATCH[1]}" # the part extracted with regex
