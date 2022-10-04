@@ -5,21 +5,35 @@
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
-oneLine="%s\n" # one line regex pattern
-
-printf "%s\n\n" "Welcome to The Block create projects script"
-printf "$oneLine" "This script will create projects with \"unique\" bins so you won't get the \"Unable to open bin\" error message." \
-"Bins that contain content you want copied over to each project, music be prepended with \"*unique\"" \
+printf "%s\n\n" "Welcome to The Block create projects script" \
+"This script is designed to create AVID projects for a new production. Files and folders will be duplicated. Bins will recreated as \"unique\" bins across all projects. However, they will be created from a pool of unique bins that you must put in the ./bins folder. The way the script works is that bins will be copied one by one from the bins folder to a new project structure. So if a project template contains 15 bins, you wish to create 15 episodes, and there are 135 unique bins in the bins folder, then the first 14 project folders will have unique bins taken from the bins folder, and the 15th project folder will containt the same bins as the first project folder. To find out how many unique bins you will need, multiply the amount of bins in the project template with the number of episodes you wish to produce. The more unique bins you have, the less likely you will encounter the \"Unable to open bin\" error message in AVID." \
+"Bins that contain clips or sequences that you want kept and duplicated across projects rather than recreated as a new bin must be prepended with \"*keep_\"" \
 "Before continuing, make sure you've customised the project template folder the way you want it in /Project-template."
 
 production=TB
 seriesnumber=19
-episodes=15
+episodes=1
 
+# initialising bins
+BINS="./bins/*.avb" # bins path
+BINSARRAY=(); # empty bins array
+BININDEX=0 # start with first bin
+
+# scan bins path and add bin paths to bins array
+for bin in $BINS
+do
+	echo "Processing $bin file..."
+	BINSARRAY+=("$bin")
+done
+
+# for bin in "${BINSARRAY[@]}"
+# do
+# 	echo "Element in BINS ARRAY: $bin"
+# done
 
 # add warning if not enough bins for unique bins. If not enough unique bins then they will be reused
 
-# create folder for episode folders
+# create master folder for projects
 mkdir "$production""$seriesnumber"_PROJECTS
 basedir=./"$production""$seriesnumber"_PROJECTS
 
@@ -43,7 +57,7 @@ function createProjects {
 	# original source path
 	originalPath="$1"
 
-	printf "Source Path:\t%s\n" "$originalPath" # print original path
+	# printf "Source Path:\t%s\n" "$originalPath" # print original path
 	# echo "Series Number: $2" # print series number
 	# echo "Current Episode: $3" # print current episode
 	# echo "Production: $4" # prints production
@@ -66,25 +80,46 @@ function createProjects {
 	truncOriginalPath="${truncOriginalPath//\*prod/$4}" # replace production
 	# truncOriginalPath=${truncOriginalPath/"*series"/"$seriesnumber"}
 	# test=${test/"*episode"/"$seriesnumber"}
-	# echo "$test"
 
 
 	# building the destination path
 	destPath="$5""$truncOriginalPath"
-	printf "Dest Path:\t%s\n" "$destPath" # prints root destination
 
-	# operations if path is a file
-	if [ -f "$1" ] ; then
-		printf "%s\n\n" "copying file"
-		echo "copy source: $1"
-		echo "copy destin: $destPath"
-		cp "$1" "$destPath"
+	# If path is a file
+	if [ -f "$originalPath" ] ; then
 
-#  cp example.txt ~/Documents/file.txt
+		printf "%s\n" "copy source: $1"
 
+		if [[ "$originalPath" == *".avb"* ]]; # If an AVID bin
+		then
+			printf "%s\n" "AVID bin found"
+			if [[ "$originalPath" == *"*keep_"* ]]; # if the AVID bin is marked as "*keep_"
+			then
+				printf "%s\n\n" "Keeping and duplicating AVID bin"
+				destPath="${destPath//\*keep_/}" # remove "*keep_" from file name in destination path
+				cp "$originalPath" "$destPath" # copy bin to destination
+			else
+				printf "%s\n\n" "Creating new AVID bin" # If the AVID bin is not marked to keep
+				echo "Process bin $BININDEX: ${BINSARRAY[BININDEX]}"
+				
+				# then fetch path of a new bin
+				# copy new bin to destination path
+				# store source file name from original path
+				# rename new bin to source file name
+				# increment bin index
+				((BININDEX++))
+			fi
+		# else
+		else
+			printf "%s\n" "General file found"
+			printf "%s\n" "Copying file"
+			cp "$originalPath" "$destPath"
+		fi
+			
+		printf "%s\n\n" "copy destin: $destPath"
 	fi
 
-	# operations if path is a directory
+	# If path is a directory
 	if [ -d "$1" ] ; then
 		printf "%s\n\n" "copying directory"
 		mkdir -p -v "$originalPath" "$destPath"
@@ -104,7 +139,7 @@ for (( i=1; i <= episodes; i++ )) do
 	fi
 
 	# notification creating episodes
-	printf "%s\n\n" "Creating Episode $currentEpisode folders"
+	printf "%s\n\n" "################ Creating Episode $currentEpisode folders ################"
 	destRootFolder="$basedir"/"$production""$seriesnumber"_EP"$currentEpisode"
 	
 	# traverses the episode template and each result is fed into "createProjects"
