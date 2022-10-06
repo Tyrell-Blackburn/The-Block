@@ -16,8 +16,8 @@ episodes=1
 
 # initialising bins
 BINS="./bins/*.avb" # bins path
-BINSARRAY=(); # empty bins array
-BININDEX=0 # start with first bin
+export BINSARRAY=(); # empty bins array
+export BININDEX=0 # start with first bin
 
 # scan bins path and add bin paths to bins array
 for bin in $BINS
@@ -25,6 +25,47 @@ do
 	echo "Processing $bin file..."
 	BINSARRAY+=("$bin")
 done
+
+EPTEMPLATE="./episode-template/*" # bins path
+
+# for path in $EPTEMPLATE
+# do
+# 	echo "$path"
+# done
+
+# for f in $EPTEMPLATE; do
+#         echo "$f is a directory"
+# done
+
+IFS="$(printf '\n\t')"
+for f in $(find ./episode-template); do
+	echo "$f"
+done
+
+
+
+# for file in $(find mydir -mtime -7 -name '*.mp3')
+# do
+#   ((count++))
+#   echo "Playing file no. $count"
+#   play "$file"
+# done
+# echo "Played $count files"
+
+# while IFS= read -r -d '' file
+# do
+#   ((count++))
+#   echo "Playing file no. $count"
+#   play "$file"
+# done <   <(find mydir -mtime -7 -name '*.mp3' -print0)
+# echo "Played $count files"
+
+
+
+
+# echo "Process bin ""$BININDEX"": ${BINSARRAY[$BININDEX]}"
+# ((BININDEX++))
+# echo "Process bin ""$BININDEX"": ${BINSARRAY[$BININDEX]}"
 
 # for bin in "${BINSARRAY[@]}"
 # do
@@ -57,73 +98,77 @@ function createProjects {
 	# original source path
 	originalPath="$1"
 
+	echo "$originalPath"
+
 	# printf "Source Path:\t%s\n" "$originalPath" # print original path
-	# echo "Series Number: $2" # print series number
-	# echo "Current Episode: $3" # print current episode
-	# echo "Production: $4" # prints production
-	# printf "Dest Path:\t%s\n" "$5" # prints root destination
+	# # echo "Series Number: $2" # print series number
+	# # echo "Current Episode: $3" # print current episode
+	# # echo "Production: $4" # prints production
+	# # printf "Dest Path:\t%s\n" "$5" # prints root destination
 
-	# truncate original path to remove the leading ./episode-template/01_*prod...
-	[[ $originalPath =~ \.\/episode-template(.*) ]] # match stored in BASH_REMATCH
-	truncOriginalPath=${BASH_REMATCH[1]}
-	# this can be simplified as
-	# TrunOriginalPath=${$1:19} Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
+	# # truncate original path to remove the leading ./episode-template/01_*prod...
+	# [[ $originalPath =~ \.\/episode-template(.*) ]] # match stored in BASH_REMATCH
+	# truncOriginalPath=${BASH_REMATCH[1]}
+	# # this can be simplified as
+	# # TrunOriginalPath=${$1:19} Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
-	# run path through pattern replacement
-	# "${source/findPattern/replaceWith}" # replace first occurance
-	# "${source//findPattern/replaceWith}" # replace all occurances
-	# If pattern begins with ‘/’, all matches of pattern are replaced.
-	# If the nocasematch shell option (see the description of shopt in The Shopt Builtin) is enabled, the match is performed without regard to the case of alphabetic characters
-	# More info on pattern matching https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
-	truncOriginalPath="${truncOriginalPath//\*series/$2}" # replace series
-	truncOriginalPath="${truncOriginalPath//\*episode/$3}" # replace episode
-	truncOriginalPath="${truncOriginalPath//\*prod/$4}" # replace production
-	# truncOriginalPath=${truncOriginalPath/"*series"/"$seriesnumber"}
-	# test=${test/"*episode"/"$seriesnumber"}
+	# # run path through pattern replacement 
+	# # "${source/findPattern/replaceWith}" # replace first occurance
+	# # "${source//findPattern/replaceWith}" # replace all occurances
+	# # If pattern begins with ‘/’, all matches of pattern are replaced.
+	# # If the nocasematch shell option (see the description of shopt in The Shopt Builtin) is enabled, the match is performed without regard to the case of alphabetic characters
+	# # More info on pattern matching https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+	# truncOriginalPath="${truncOriginalPath//\*series/$2}" # replace series
+	# truncOriginalPath="${truncOriginalPath//\*episode/$3}" # replace episode
+	# truncOriginalPath="${truncOriginalPath//\*prod/$4}" # replace production
+	# # truncOriginalPath=${truncOriginalPath/"*series"/"$seriesnumber"}
+	# # test=${test/"*episode"/"$seriesnumber"}
 
+	# # building the destination path
+	# destPath="$5""$truncOriginalPath"
 
-	# building the destination path
-	destPath="$5""$truncOriginalPath"
+	# # If path is a file
+	# if [ -f "$originalPath" ] ; then
 
-	# If path is a file
-	if [ -f "$originalPath" ] ; then
+	# 	printf "%s\n" "copy source: $1"
 
-		printf "%s\n" "copy source: $1"
-
-		if [[ "$originalPath" == *".avb"* ]]; # If an AVID bin
-		then
-			printf "%s\n" "AVID bin found"
-			if [[ "$originalPath" == *"*keep_"* ]]; # if the AVID bin is marked as "*keep_"
-			then
-				printf "%s\n\n" "Keeping and duplicating AVID bin"
-				destPath="${destPath//\*keep_/}" # remove "*keep_" from file name in destination path
-				cp "$originalPath" "$destPath" # copy bin to destination
-			else
-				printf "%s\n\n" "Creating new AVID bin" # If the AVID bin is not marked to keep
-				echo "Process bin $BININDEX: ${BINSARRAY[BININDEX]}"
+	# 	if [[ "$originalPath" == *".avb"* ]]; # If an AVID bin
+	# 	then
+	# 		printf "%s\n" "AVID bin found"
+	# 		if [[ "$originalPath" == *"*keep_"* ]]; # if the AVID bin is marked as "*keep_"
+	# 		then
+	# 			printf "%s\n\n" "Keeping and duplicating AVID bin"
+	# 			destPath="${destPath//\*keep_/}" # remove "*keep_" from file name in destination path
+	# 			cp "$originalPath" "$destPath" # copy bin to destination
+	# 		else
+	# 			printf "%s\n\n" "Creating new AVID bin" # If the AVID bin is not marked to keep
+	# 			# echo "Process bin $BININDEX: ${BINSARRAY[$BININDEX]}"
+	# 			echo "Process bin $BININDEX: ${BINSARRAY}"
+	# 			echo "${BINSARRAY[0]}"
 				
-				# then fetch path of a new bin
-				# copy new bin to destination path
-				# store source file name from original path
-				# rename new bin to source file name
-				# increment bin index
-				((BININDEX++))
-			fi
-		# else
-		else
-			printf "%s\n" "General file found"
-			printf "%s\n" "Copying file"
-			cp "$originalPath" "$destPath"
-		fi
-			
-		printf "%s\n\n" "copy destin: $destPath"
-	fi
 
-	# If path is a directory
-	if [ -d "$1" ] ; then
-		printf "%s\n\n" "copying directory"
-		mkdir -p -v "$originalPath" "$destPath"
-	fi
+	# 			# then fetch path of a new bin
+	# 			# copy new bin to destination path
+	# 			# store source file name from original path
+	# 			# rename new bin to source file name
+	# 			# increment bin index
+	# 			((BININDEX++)) # not incrementing
+	# 		fi
+	# 	# else
+	# 	else
+	# 		printf "%s\n" "General file found"
+	# 		printf "%s\n" "Copying file"
+	# 		cp "$originalPath" "$destPath"
+	# 	fi
+			
+	# 	printf "%s\n\n" "copy destin: $destPath"
+	# fi
+
+	# # If path is a directory
+	# if [ -d "$1" ] ; then
+	# 	printf "%s\n\n" "copying directory"
+	# 	mkdir -p -v "$originalPath" "$destPath"
+	# fi
 }
 
 # not sure why we need to export the function but this is necessary when using it with "find"
