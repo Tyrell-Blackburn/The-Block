@@ -5,6 +5,8 @@
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
+# ADD RENAMING OF THE PROJECT FILE TO THE EPISODE PROJECT
+
 printf "%s\n\n" "Welcome to The Block Project Creation Script" \
 "This script creates AVID projects for a new season of The Block based on a project template in the /project-template folder. While general folders and files will be duplicated across new projects, bins will be recreated as \"unique\" bins from a pool of unique bins in order to avoid the \"Unable to open bin\" error message when opening duplicate bins in AVID."
 
@@ -14,23 +16,34 @@ printf "%s\n\n" "INSTRUCTIONS FOR PREPARING THE PROJECT TEMPLATE"
 
 printf "%s\n\n" "For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, please add a \"*keep_\" to the start of the bin file name."
 
-# assume invalid input
-validinput=false
+printf "%s\n\n" "For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, please add a \"*keep_\" to the start of the bin file name."
 
-while [ $validinput = false ]; do
-	read -rp "Have you customised the project template and are ready to continue? (y/n): " answer
-	if [ "$answer" == "n" ]; then
-		echo "script terminated"
-		exit;
-	elif [ "$answer" == "y" ]; then
-		validinput=true
-	else
-		echo "Enter a 'y' or 'n' to continue.";
-	fi
-done
-validinput=false
+continueScript () {
 
+	# assume invalid input
+	validinput=false
 
+	while [ $validinput = false ]; do
+		read -rp "$1" answer
+		if [ "$answer" == "n" ]; then
+			echo "script terminated"
+			exit;
+		elif [ "$answer" == "y" ]; then
+			validinput=true
+		else
+			echo "Enter a 'y' or 'n' to continue.";
+		fi
+	done
+}
+
+continueScript "Have you customised the project template and are ready to continue? (y/n): "
+
+# read -p "Enter the production initials (e.g. TB): " production
+# checkinput $production
+# read -p "Enter the series number (e.g. 20 for series 20): " seriesnumber
+# checkinput $seriesnumber
+# read -p "Enter how many episodes: " episodes
+# checkinput $episodes
 
 
 # $seriesnumber - e.g. 19
@@ -54,8 +67,7 @@ AVAILABLEBINS=${#BINSARRAY[@]}
 NEWBINS=0
 
 # calculating how many unique bins needed per project
-while IFS= read -r -d '' path
-do
+while IFS= read -r -d '' path; do
 	if [ -f "$path" ] ; then
 		if [[ "$path" == *".avb"* ]]; then # if is a bin 
 			if [[ "$path" != *"*keep_"* ]]; then # if not marked as keep
@@ -68,28 +80,37 @@ done <   <(find ./episode-template -print0)
 # how many unique bins needed to ensure bins over all projects are unique 
 NEEDEDBINS=$((NEWBINS*episodes))
 
-echo "Each project requires $NEWBINS unique bins in order to avoid the \"Unable to open bin\" error message while opening bins within the same project."
+PROJECTSWITHUNIQUEBINS=$((AVAILABLEBINS/NEWBINS))
 
-echo "All projects combined need a total of $NEEDEDBINS unique bins in order to avoid the \"Unable to open bin\" error message while opening bins across projects."
+MISSINGBINS=$((NEEDEDBINS-AVAILABLEBINS))
 
-echo "You have $AVAILABLEBINS unique bins."
+echo $PROJECTSWITHUNIQUEBINS
 
 # a warning if there are not enough unique bins to ensure bins across all projects are unique
 if [[ NEEDEDBINS -gt AVAILABLEBINS ]]; then
-	echo "to avoid the \"Unable to open bin\" error message while opening bins across projects you need $((NEEDEDBINS-AVAILABLEBINS)) more bins."
-	
-	while [ $validinput = false ]; do
-		read -rp "Do you wish to continue? (y/n): " answer
-		if [ "$answer" == "n" ]; then
-			echo "script terminated"
-			exit;
-			elif [ "$answer" == "y" ]; then
-				validinput=true
-			else
-				echo "Enter a 'y' or 'n' to continue.";
-		fi
-	done
-	validinput=false
+	echo "To create $episodes episode projects you need a total of $NEEDEDBINS unique bins in order to avoid the \"Unable to open bin\" error."
+	printf "%s" "You have $AVAILABLEBINS bins. If you continue there is a chance you will get this error as "
+	if [[ PROJECTSWITHUNIQUEBINS -lt 1 ]]; then
+		printf "%s" "not even one project"
+	elif [[ $PROJECTSWITHUNIQUEBINS == 1 ]]; then
+		printf "%s" "only $((PROJECTSWITHUNIQUEBINS)) project"
+	else
+		printf "%s" "only $((PROJECTSWITHUNIQUEBINS)) projects"
+	fi
+
+	printf "%s\n" " will have completely unique bins. "
+
+	printf "%s" "In order to avoid this, add $((MISSINGBINS)) more "
+
+	if [[ $MISSINGBINS == 1 ]]; then
+		printf "%s" "bin"
+	elif [[ $MISSINGBINS -gt 1 ]]; then
+		printf "%s" "bins"
+	fi
+
+	printf "%s\n\n" " to the bins folder."
+
+	continueScript "Do you wish to continue? (y/n): "
 fi
 
 # code to check variable name. Want to use this for switch statement to check different input variables and then check what they should be
@@ -100,10 +121,10 @@ fi
 
 # Code used to check continueinput is valid or not
 
-function checkinput {
-	echo 
-    # echo "${!1@}"
-}
+# function checkinput {
+# 	echo 
+#     # echo "${!1@}"
+# }
 
 # create folder that holds all projects
 mkdir "$production""$seriesnumber"_PROJECTS
@@ -182,22 +203,7 @@ for (( i=1; i <= episodes; i++ )) do
 	done <   <(find ./episode-template -print0)
 done
 
-
-
-
-
 ##### TEMPORARY CODE #####
-
-
-
-
-# read -p "Enter the production initials (e.g. TB): " production
-# checkinput $production
-# read -p "Enter the series number (e.g. 20 for series 20): " seriesnumber
-# checkinput $seriesnumber
-# read -p "Enter how many episodes: " episodes
-# checkinput $episodes
-
 
 # create checks for all three input variables
 # while [ "$continuescript" != "n" ] && [ "$continuescript" != "y" ]
