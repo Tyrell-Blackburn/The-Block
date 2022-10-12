@@ -5,23 +5,50 @@
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
-# ADD RENAMING OF THE PROJECT FILE TO THE EPISODE PROJECT
+# add input validation function for production, series, and episode (switch statement)
+# change input to lowercase for continue function
+# change production intials to uppercase
+# change variable names to bash best practices
 
-printf "%s\n\n" "Welcome to The Block Project Creation Script" \
-"This script creates AVID projects for a new season of The Block based on a project template in the /project-template folder. While general folders and files will be duplicated across new projects, bins will be recreated as \"unique\" bins from a pool of unique bins in order to avoid the \"Unable to open bin\" error message when opening duplicate bins in AVID."
+printf "%s\n\n" "Welcome to The AVID Project Creation Script" \
+"This script will create AVID projects for a new season of a production based on a template. Bins will be created (rather than duplicated) from a pool of unique bins (they must be originally created in AVID). This is done in order to avoid the \"Unable to open bin\" error message when opening duplicate bins."
 
-printf "%s\n\n" "Please populate the bins folder with unique bins. The script will warn you if you don't have enough bins and will let you know how much more you need." \
+printf "%s\n\n" "Please populate the bins folder with unique bins. If you don't have enough bins inside to create unique bins across all projects, the script will alert you to this."
 
-printf "%s\n\n" "INSTRUCTIONS FOR PREPARING THE PROJECT TEMPLATE" 
+printf "%s\n\n" "INSTRUCTIONS FOR PREPARING THE PROJECT TEMPLATE"
 
-printf "%s\n\n" "For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, please add a \"*keep_\" to the start of the bin file name."
+printf "%s\n\n" "1. Create the perfect project template in the \"project-template\" folder. The only required file is the \"*prod*series_EP*episode.avp\", which is needed by AVID to recognise the folder as a project."
 
-printf "%s\n\n" "For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, please add a \"*keep_\" to the start of the bin file name."
+printf "%s\n\n" "2. Rename the files and folders in the project template by replacing the production initials, series number, and episode number with the following: 
 
+*prod = will become the production, e.g. TB
+*series = will become the series number, e.g. 19
+*episode = will become the episode number, e.g 34"
+
+printf "%s\n\n" "3. For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, add a \"*keep_\" to the start of the bin file name."
+
+printf "%s\n\n" "4. Populate the bins folder with unique bins created from AVID."
+
+printf "%s\n\n" "Here is an example of how the project template should look like.
+
+What files and folders look like in the project-template folder:
+
+*prod*series_EP*episode_Final DB screening.avb
+!!!*prod*series_EP*episode_SCREENINGS (folder)
+	*keep_!TIMECODE.avb
+	*prod*series_EP*episode_Content screening.avb
+
+What they look like after they have been built in a new project:
+
+!!!TB19_EP02_FOR WEB.avb
+!!!TB19_EP02_SCREENINGS
+	!TIMECODE.avb
+	TB19_EP02_Content screening.avb"
+
+# Function asking user if they want to continue
+# $1 is the question string
 continueScript () {
-
-	# assume invalid input
-	validinput=false
+	validinput=false # assume invalid input
 
 	while [ $validinput = false ]; do
 		read -rp "$1" answer
@@ -36,29 +63,65 @@ continueScript () {
 	done
 }
 
-continueScript "Have you customised the project template and are ready to continue? (y/n): "
+continueScript "Have you added unique bins to the bins folder and customised the project template to your liking? (y/n): "
 
-# read -p "Enter the production initials (e.g. TB): " production
-# checkinput $production
-# read -p "Enter the series number (e.g. 20 for series 20): " seriesnumber
-# checkinput $seriesnumber
-# read -p "Enter how many episodes: " episodes
-# checkinput $episodes
 
+
+checkInput () {
+	validinput=false # assume invalid input
+
+	while [ $validinput = false ]; do
+		read -rp "$1" answer
+		if [ "$answer" == "n" ]; then
+			echo "script terminated"
+			exit;
+		elif [ "$answer" == "y" ]; then
+			validinput=true
+		else
+			echo "Enter a 'y' or 'n' to continue.";
+		fi
+	done
+}
 
 # $seriesnumber - e.g. 19
 # $currentEpisode - e.g. 01
 # $production - e.g. TB
-production=TB
-seriesnumber=19
-episodes=5
+
+read -p "Enter the production initials (e.g. TB): " production
+# checkinput $production
+read -p "Enter the series number (e.g. 20 for series 20): " seriesnumber
+# checkinput $seriesnumber
+read -p "Enter how many episodes: " episodes
+# checkinput $episodes
+
+# code to check variable name. Want to use this for switch statement to check different input variables and then check what they should be
+
+# for var in production seriesnumber episodes ; do
+#     echo $var ${!var}
+# done
+
+# Code used to check continueinput is valid or not
+
+# function checkinput {
+# 	echo 
+#     # echo "${!1@}"
+# }
+
+### BINS ###
 
 BINSPATH="./bins/*.avb" # bins path
 BINSARRAY=(); # initialize empty bin array
 BININDEX=0 # bin index used to cycle through the bins
 
 # add bins to BINSARRAY array
-for bin in $BINSPATH; do BINSARRAY+=("$bin"); done
+for bin in $BINSPATH; do
+	# if this string appears, it means no bins were added to the bins folder. Not the most efficient check.
+	if [[ "$bin" == "./bins/*.avb" ]]; then #
+		echo "No bins were detected in the bins folder. Please add some and restart the script."
+		exit;
+	fi
+	BINSARRAY+=("$bin");
+done
 
 # how many unique bins available
 AVAILABLEBINS=${#BINSARRAY[@]}
@@ -68,23 +131,23 @@ NEWBINS=0
 
 # calculating how many unique bins needed per project
 while IFS= read -r -d '' path; do
-	if [ -f "$path" ] ; then
+	if [[ -f "$path" ]] ; then
 		if [[ "$path" == *".avb"* ]]; then # if is a bin 
 			if [[ "$path" != *"*keep_"* ]]; then # if not marked as keep
 				((NEWBINS++)) # increment bin index
 			fi
 		fi
 	fi
-done <   <(find ./episode-template -print0)
+done <   <(find ./project-template -print0)
 
 # how many unique bins needed to ensure bins over all projects are unique 
 NEEDEDBINS=$((NEWBINS*episodes))
 
+# How many projects will have totally unique bins
 PROJECTSWITHUNIQUEBINS=$((AVAILABLEBINS/NEWBINS))
 
+# How many extra bins are needed to ensure unique bins across all projects
 MISSINGBINS=$((NEEDEDBINS-AVAILABLEBINS))
-
-echo $PROJECTSWITHUNIQUEBINS
 
 # a warning if there are not enough unique bins to ensure bins across all projects are unique
 if [[ NEEDEDBINS -gt AVAILABLEBINS ]]; then
@@ -110,21 +173,8 @@ if [[ NEEDEDBINS -gt AVAILABLEBINS ]]; then
 
 	printf "%s\n\n" " to the bins folder."
 
-	continueScript "Do you wish to continue? (y/n): "
+	continueScript "If you continue now. Not all projects will have unique bins. Do you wish to continue? (y/n): "
 fi
-
-# code to check variable name. Want to use this for switch statement to check different input variables and then check what they should be
-
-# for var in production seriesnumber episodes ; do
-#     echo $var ${!var}
-# done
-
-# Code used to check continueinput is valid or not
-
-# function checkinput {
-# 	echo 
-#     # echo "${!1@}"
-# }
 
 # create folder that holds all projects
 mkdir "$production""$seriesnumber"_PROJECTS
@@ -149,9 +199,9 @@ for (( i=1; i <= episodes; i++ )) do
 
 	while IFS= read -r -d '' path
 	do
-		# $path - the path being considered from 'find' - e.g. ./episode-template/!!!*prod*series_EP*episode_SCREENINGS
-		# capture the last part of the path after "./episode-template" to process
-		# [[ $path =~ \.\/episode-template(.*) ]] # gets assigned to global variable BASH_REMATCH
+		# $path - the path being considered from 'find' - e.g. ./project-template/!!!*prod*series_EP*episode_SCREENINGS
+		# capture the last part of the path after "./project-template" to process
+		# [[ $path =~ \.\/project-template(.*) ]] # gets assigned to global variable BASH_REMATCH
 		# truncPath=${BASH_REMATCH[1]} # storing the last part of the path
 		truncPath=${path:18} # Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
@@ -182,7 +232,7 @@ for (( i=1; i <= episodes; i++ )) do
 					# printf "%s\n" "Creating new AVID bin" 
 					# fetch bin to copy
 					bin=${BINSARRAY[$BININDEX]}
-					echo "fetching bin $BININDEX: $bin"
+					# echo "fetching bin $BININDEX: $bin"
 					# copy new bin to destination path
 					cp "$bin" "$destPath"
 					# increment bin index
@@ -200,7 +250,7 @@ for (( i=1; i <= episodes; i++ )) do
 		if [ -d "$path" ] ; then
 			mkdir -p -v "$destPath"
 		fi
-	done <   <(find ./episode-template -print0)
+	done <   <(find ./project-template -print0)
 done
 
 ##### TEMPORARY CODE #####
