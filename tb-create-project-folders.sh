@@ -46,66 +46,170 @@ What they look like after they have been built in a new project:
 	TB19_EP02_Content screening.avb"
 
 # Function asking user if they want to continue
-# $1 is the question string
+# $1 = question string
 continueScript () {
-	validinput=false # assume invalid input
-
+	local validinput=false # assume invalid input
 	while [ $validinput = false ]; do
 		read -rp "$1" answer
-		if [ "$answer" == "n" ]; then
-			echo "script terminated"
+		if [ "$answer" == "y" ] || [ "$answer" == "Y" ]; then
+			validinput=true # only if yes continue
+		elif [ "$answer" == "n" ] || [ "$answer" == "N" ]; then
+			echo "script terminated" # if no terminate script
 			exit;
-		elif [ "$answer" == "y" ]; then
-			validinput=true
 		else
-			echo "Enter a 'y' or 'n' to continue.";
+			echo "Enter a 'y' or 'n' to continue."
 		fi
 	done
 }
 
 continueScript "Have you added unique bins to the bins folder and customised the project template to your liking? (y/n): "
 
+# $production - e.g. TB
+# $seriesnumber - e.g. 19
+# $episodes - e.g. 01
+
+### check input function ###
+# $1 = variable name, e.g. "production"
+# checkInput2 () {
+# 	local validinput=false # assume invalid input
+# 	echo "\$1 is: $1"
+# 	case $1 in
+
+# 	production)
+# 		echo "inside production"
+# 		re='[a-zA-Z]' # maybe need [a-z,A-Z] with comma ?
+# 		while [ $validinput = false ]; do
+# 			if [[ "$production" =~ $re ]]; then
+# 				validinput=true # only if yes continue
+# 			else
+# 				printf "%s" "Enter letters only to continue: "
+# 				read -r production
+# 			fi
+# 		done
+# 		;;
+
+# 	seriesnumber)
+# 		echo "inside seriesnumber"
+# 		re='[0-9]'
+# 		while [ $validinput = false ]; do
+# 			if [[ "$seriesnumber" =~ $re ]]; then
+# 				validinput=true # only if yes continue
+# 			else
+# 				printf "%s" "Enter a number only: "
+# 				read -r seriesnumber
+# 			fi
+# 		done
+# 		;;
+
+# 	episodes)
+# 		echo "inside episodes"
+# 		re='[0-9]'
+# 		while [ $validinput = false ]; do
+# 			if [[ "$seriesnumber" == $re ]]; then
+# 				validinput=true # only if yes continue
+# 			else
+# 				printf "%s" "Enter a number only: "
+# 				read -r seriesnumber
+# 			fi
+# 		done
+# 		;;
+# 	*)
+# 		echo "in forbidden zone"
+# 		;;
+# 	esac
+# }
+
+### Validate input function ###
+# $1 = regular expression validation
+# $2 = variable to evaluate
+# $3 = retry text
 
 
-checkInput () {
-	validinput=false # assume invalid input
+
+
+
+# 	function validate {
+# 		while [ $validinput = false ]; do
+# 			if [[ "$stringToValidate" =~ $re ]]; then
+# 				validinput=true # only if yes continue
+# 			else
+# 				printf "%s" "retryText"
+# 				read -r production
+# 			fi
+# 		done
+# 	}
+
+
+# 	if [[ "$variableName" == "production" ]] ; then
+# 		echo
+# 	fi
+
+# 	while [ $validinput = false ]; do
+# 		if [[ "$stringToValidate" =~ $re ]]; then
+# 			validinput=true # only if yes continue
+# 		else
+# 			printf "%s" "retryText"
+# 			read -r production
+# 		fi
+# 	done
+# 	;;
+
+# 	seriesnumber)
+# 		echo "inside seriesnumber"
+# 		re='[0-9]'
+# 		while [ $validinput = false ]; do
+# 			if [[ "$seriesnumber" =~ $re ]]; then
+# 				validinput=true # only if yes continue
+# 			else
+# 				printf "%s" "Enter numbers only to continue: "
+# 				read -r seriesnumber
+# 			fi
+# 		done
+# 		;;
+
+# 	esac
+# }
+
+
+### check input function ###
+validateInput () {
+	local validinput=false # assume invalid input
+	
+	echo "\$1 is: $1"
+	echo "\$2 is: $2"
+	echo "\$3 is: $3"
+
+	re="$1" 
+	variableName="$2" # expand to text to evaluate
+	retryText="$3"
 
 	while [ $validinput = false ]; do
-		read -rp "$1" answer
-		if [ "$answer" == "n" ]; then
-			echo "script terminated"
-			exit;
-		elif [ "$answer" == "y" ]; then
-			validinput=true
+		if [[ "$variableName" =~ $re ]]; then
+			validinput=true # only if yes continue
 		else
-			echo "Enter a 'y' or 'n' to continue.";
+			printf "%s" "$retryText"
+			read -r variableName
 		fi
 	done
 }
 
-# $seriesnumber - e.g. 19
-# $currentEpisode - e.g. 01
-# $production - e.g. TB
+printf "%s" "Enter the production initials (e.g. TB): "
+read -r production
+validateInput '[a-zA-Z]' "${!production@}" "Enter letters only to continue: " # maybe need [a-z,A-Z] with comma ?
+printf "%s" "Enter the series number (e.g. 20 for series 20): "
+read -r seriesnumber
+validateInput '[0-9]' "${!seriesnumber@}" "Enter numbers only to continue: "
+printf "%s" "Enter how many episodes: "
+read -r episodes
+validateInput '[0-9]' "${!episodes@}" "Enter numbers only to continue: "
 
-read -p "Enter the production initials (e.g. TB): " production
-# checkinput $production
-read -p "Enter the series number (e.g. 20 for series 20): " seriesnumber
-# checkinput $seriesnumber
-read -p "Enter how many episodes: " episodes
-# checkinput $episodes
 
-# code to check variable name. Want to use this for switch statement to check different input variables and then check what they should be
 
 # for var in production seriesnumber episodes ; do
 #     echo $var ${!var}
 # done
 
-# Code used to check continueinput is valid or not
 
-# function checkinput {
-# 	echo 
-#     # echo "${!1@}"
-# }
 
 ### BINS ###
 
