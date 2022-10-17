@@ -70,54 +70,84 @@ continueScript "Have you added unique bins to the bins folder and customised the
 
 ### check input function ###
 # $1 = variable name, e.g. "production"
-# checkInput2 () {
+validateInput () {
+	local validinput=false # assume invalid input
+	echo "\$1 is: $1"
+	case $1 in
+
+	production)
+		echo "inside production"
+		re='[a-zA-Z]' # how to I check to make sure it's only letters and not numbers?
+		while [ $validinput = false ]; do
+
+			if [[ ! "$production" =~ $re ]]; then
+
+			# if [[ "$production" =~ $re ]]; then
+				printf "%s" "Enter letters only to continue: "
+				read -r production
+			else
+				echo "matches"
+				validinput=true # only if yes continue
+			fi
+		done
+		;;
+
+	seriesnumber)
+		echo "inside seriesnumber"
+		re='[0-9]'
+		while [ $validinput = false ]; do
+			if [[ "$seriesnumber" =~ $re ]]; then
+				validinput=true # only if yes continue
+			else
+				printf "%s" "Enter numbers only to continue: "
+				read -r seriesnumber
+			fi
+		done
+		;;
+
+	episodes)
+		echo "inside episodes"
+		re='[0-9]'
+		while [ $validinput = false ]; do
+			if [[ "$episodes" =~ $re ]]; then
+				validinput=true # only if yes continue
+			else
+				printf "%s" "Enter numbers only to continue: "
+				read -r episodes
+			fi
+		done
+		;;
+	esac
+}
+
+# validateInput () {
 # 	local validinput=false # assume invalid input
-# 	echo "\$1 is: $1"
-# 	case $1 in
+	
+# 	echo "\$1 is: $1" # regex - WORKING
+# 	echo "\$2 is: $2"
+# 	echo "\$3 is: $3"
+# 	echo "\$3 is: ""${variableName}"
+# 	echo "\$4 is: $4" # reply text - WORKING
 
-# 	production)
-# 		echo "inside production"
-# 		re='[a-zA-Z]' # maybe need [a-z,A-Z] with comma ?
-# 		while [ $validinput = false ]; do
-# 			if [[ "$production" =~ $re ]]; then
-# 				validinput=true # only if yes continue
-# 			else
-# 				printf "%s" "Enter letters only to continue: "
-# 				read -r production
-# 			fi
-# 		done
-# 		;;
+# 	re="$1" # regex - WORKING
+# 	textToValidate="$2" # variable text to validate
+# 	variableName="$3" # variable name
+# 	retryText="$4" # reply text - WORKING
 
-# 	seriesnumber)
-# 		echo "inside seriesnumber"
-# 		re='[0-9]'
-# 		while [ $validinput = false ]; do
-# 			if [[ "$seriesnumber" =~ $re ]]; then
-# 				validinput=true # only if yes continue
-# 			else
-# 				printf "%s" "Enter a number only: "
-# 				read -r seriesnumber
-# 			fi
-# 		done
-# 		;;
+# 	echo $variableName
 
-# 	episodes)
-# 		echo "inside episodes"
-# 		re='[0-9]'
-# 		while [ $validinput = false ]; do
-# 			if [[ "$seriesnumber" == $re ]]; then
-# 				validinput=true # only if yes continue
-# 			else
-# 				printf "%s" "Enter a number only: "
-# 				read -r seriesnumber
-# 			fi
-# 		done
-# 		;;
-# 	*)
-# 		echo "in forbidden zone"
-# 		;;
-# 	esac
+# 	while [ $validinput = false ]; do
+# 		if [[ "$3""$variableName" =~ $re ]]; then
+# 			echo "matches"
+# 			validinput=true # only if yes continue
+# 			production=$textToValidate
+# 		else
+# 			printf "%s" "$retryText"
+# 			read -r production
+# 		fi
+# 	done
 # }
+
 
 ### Validate input function ###
 # $1 = regular expression validation
@@ -172,36 +202,46 @@ continueScript "Have you added unique bins to the bins folder and customised the
 
 
 ### check input function ###
-validateInput () {
-	local validinput=false # assume invalid input
+# validateInput () {
+# 	local validinput=false # assume invalid input
 	
-	echo "\$1 is: $1"
-	echo "\$2 is: $2"
-	echo "\$3 is: $3"
+# 	echo "\$1 is: $1" # regex - WORKING
+# 	echo "\$2 is: $2"
+# 	echo "\$3 is: $3"
+# 	echo "\$3 is: ""${variableName}"
+# 	echo "\$4 is: $4" # reply text - WORKING
 
-	re="$1" 
-	variableName="$2" # expand to text to evaluate
-	retryText="$3"
+# 	re="$1" # regex - WORKING
+# 	textToValidate="$2" # variable text to validate
+# 	variableName="$3" # variable name
+# 	retryText="$4" # reply text - WORKING
 
-	while [ $validinput = false ]; do
-		if [[ "$variableName" =~ $re ]]; then
-			validinput=true # only if yes continue
-		else
-			printf "%s" "$retryText"
-			read -r variableName
-		fi
-	done
-}
+# 	echo $variableName
+
+# 	while [ $validinput = false ]; do
+# 		if [[ "$3""$variableName" =~ $re ]]; then
+# 			echo "matches"
+# 			validinput=true # only if yes continue
+# 			production=$textToValidate
+# 		else
+# 			printf "%s" "$retryText"
+# 			read -r production
+# 		fi
+# 	done
+# }
 
 printf "%s" "Enter the production initials (e.g. TB): "
 read -r production
-validateInput '[a-zA-Z]' "${!production@}" "Enter letters only to continue: " # maybe need [a-z,A-Z] with comma ?
+validateInput "${!production@}"
+# validateInput "[a-zA-Z]" "$production" "${!production@}" "Enter letters only to continue: " # maybe need [a-z,A-Z] with comma ?
 printf "%s" "Enter the series number (e.g. 20 for series 20): "
 read -r seriesnumber
-validateInput '[0-9]' "${!seriesnumber@}" "Enter numbers only to continue: "
+validateInput "${!seriesnumber@}"
+# validateInput '[0-9]' "$seriesnumber" "${!seriesnumber@}" "Enter numbers only to continue: "
 printf "%s" "Enter how many episodes: "
 read -r episodes
-validateInput '[0-9]' "${!episodes@}" "Enter numbers only to continue: "
+validateInput "${!episodes@}"
+# validateInput '[0-9]' "$episodes" "${!episodes@}" "Enter numbers only to continue: "
 
 
 
