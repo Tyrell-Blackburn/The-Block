@@ -5,33 +5,28 @@
 # Created by Tyrell Blackburn
 # https://github.com/tyrell-blackburn
 
-# add input validation function for production, series, and episode (switch statement)
-# change input to lowercase for continue function
-# change production intials to uppercase
-# change variable names to bash best practices
-
 printf "%s\n\n" "Welcome to The AVID Project Creation Script" \
-"This script will create AVID projects for a new season of a production based on a template. Bins will be created (rather than duplicated) from a pool of unique bins (they must be originally created in AVID). This is done in order to avoid the \"Unable to open bin\" error message when opening duplicate bins."
+"This script will create AVID projects for a new production based on a template. Bins will be taken one-by-one from a pool of unique bins (they must be originally created in AVID) rather than duplicate from the template. This ensures the \"Unable to open bin\" error message is avoided when opening bins across projects."
 
-printf "%s\n\n" "Please populate the bins folder with unique bins. If you don't have enough bins inside to create unique bins across all projects, the script will alert you to this."
+printf "%s\n\n" "HOW TO USE THIS SCRIPT"
 
-printf "%s\n\n" "INSTRUCTIONS FOR PREPARING THE PROJECT TEMPLATE"
+printf "%s\n\n" "1. Create a template of your project folder in the \"project-template\" folder." \
+"NOTE: At minimum the \"*prod*series_EP*episode.avp\" must be kept in order for AVID to recognise the folder as a project."
 
-printf "%s\n\n" "1. Create the perfect project template in the \"project-template\" folder. The only required file is the \"*prod*series_EP*episode.avp\", which is needed by AVID to recognise the folder as a project."
-
-printf "%s\n\n" "2. Rename the files and folders in the project template by replacing the production initials, series number, and episode number with the following: 
-
-*prod = will become the production, e.g. TB
-*series = will become the series number, e.g. 19
-*episode = will become the episode number, e.g 34"
+printf "%s\n\n" "2. Rename the files and folders in the project template by replacing the production initials, series number, and episode number with the following:" \
+"The production, e.g. TB, will become \"*prod\"" \
+"The series number, e.g. 19, will become \"*series\"" \
+"The episode number, e.g 34, will become \"*episode\""
 
 printf "%s\n\n" "3. For bins that contain useful content such as sequence templates or timecode filters that you wish to have duplicated across all projects, add a \"*keep_\" to the start of the bin file name."
 
 printf "%s\n\n" "4. Populate the bins folder with unique bins created from AVID."
 
+printf "%s\n\n" "If you don't have enough bins to create unique bins across all projects, the script will alert you to this."
+
 printf "%s\n\n" "Here is an example of how the project template should look like.
 
-What files and folders look like in the project-template folder:
+What files and folders should look like in the project-template folder:
 
 *prod*series_EP*episode_Final DB screening.avb
 !!!*prod*series_EP*episode_SCREENINGS (folder)
@@ -62,57 +57,44 @@ continueScript () {
 	done
 }
 
-continueScript "Have you added unique bins to the bins folder and customised the project template to your liking? (y/n): "
+continueScript "First customise the project template and add unique bins to the bins folder. Are you ready to continue? (y/n): "
 
 # $production - e.g. TB
 # $seriesnumber - e.g. 19
 # $episodes - e.g. 01
 
 ### check input function ###
+### this is quite basic as it only checks numbers and letters ###
 # $1 = variable name, e.g. "production"
 validateInput () {
 	local validinput=false # assume invalid input
-	echo "\$1 is: $1"
+	local numbers='[0-9]'
+	local letters='[a-zA-Z]'
+	
 	case $1 in
-
-	production)
-		echo "inside production"
-		re='[a-zA-Z]' # how to I check to make sure it's only letters and not numbers?
-		while [ $validinput = false ]; do
-
-			if [[ ! "$production" =~ $re ]]; then
-
-			# if [[ "$production" =~ $re ]]; then
-				printf "%s" "Enter letters only to continue: "
-				read -r production
-			else
-				echo "matches"
-				validinput=true # only if yes continue
-			fi
-		done
-		;;
-
 	seriesnumber)
-		echo "inside seriesnumber"
-		re='[0-9]'
 		while [ $validinput = false ]; do
-			if [[ "$seriesnumber" =~ $re ]]; then
+			if [[ "$seriesnumber" =~ $letters ]]; then
+				printf "%s" "Enter digits only for the series number (e.g. \"20\"): "
+				read -r seriesnumber
+			elif [[ "$seriesnumber" =~ $numbers ]]; then
 				validinput=true # only if yes continue
 			else
-				printf "%s" "Enter numbers only to continue: "
+				printf "%s" "Enter digits only for the series number (e.g. \"20\"): "
 				read -r seriesnumber
 			fi
 		done
 		;;
 
 	episodes)
-		echo "inside episodes"
-		re='[0-9]'
 		while [ $validinput = false ]; do
-			if [[ "$episodes" =~ $re ]]; then
+			if [[ "$episodes" =~ $letters ]]; then
+				printf "%s" "Enter digits only for the number of episodes (e.g. \"52\"): "
+				read -r episodes
+			elif [[ "$episodes" =~ $numbers ]]; then
 				validinput=true # only if yes continue
 			else
-				printf "%s" "Enter numbers only to continue: "
+				printf "%s" "Enter digits only for the number of episodes (e.g. \"52\"): "
 				read -r episodes
 			fi
 		done
@@ -120,136 +102,14 @@ validateInput () {
 	esac
 }
 
-# validateInput () {
-# 	local validinput=false # assume invalid input
-	
-# 	echo "\$1 is: $1" # regex - WORKING
-# 	echo "\$2 is: $2"
-# 	echo "\$3 is: $3"
-# 	echo "\$3 is: ""${variableName}"
-# 	echo "\$4 is: $4" # reply text - WORKING
-
-# 	re="$1" # regex - WORKING
-# 	textToValidate="$2" # variable text to validate
-# 	variableName="$3" # variable name
-# 	retryText="$4" # reply text - WORKING
-
-# 	echo $variableName
-
-# 	while [ $validinput = false ]; do
-# 		if [[ "$3""$variableName" =~ $re ]]; then
-# 			echo "matches"
-# 			validinput=true # only if yes continue
-# 			production=$textToValidate
-# 		else
-# 			printf "%s" "$retryText"
-# 			read -r production
-# 		fi
-# 	done
-# }
-
-
-### Validate input function ###
-# $1 = regular expression validation
-# $2 = variable to evaluate
-# $3 = retry text
-
-
-
-
-
-# 	function validate {
-# 		while [ $validinput = false ]; do
-# 			if [[ "$stringToValidate" =~ $re ]]; then
-# 				validinput=true # only if yes continue
-# 			else
-# 				printf "%s" "retryText"
-# 				read -r production
-# 			fi
-# 		done
-# 	}
-
-
-# 	if [[ "$variableName" == "production" ]] ; then
-# 		echo
-# 	fi
-
-# 	while [ $validinput = false ]; do
-# 		if [[ "$stringToValidate" =~ $re ]]; then
-# 			validinput=true # only if yes continue
-# 		else
-# 			printf "%s" "retryText"
-# 			read -r production
-# 		fi
-# 	done
-# 	;;
-
-# 	seriesnumber)
-# 		echo "inside seriesnumber"
-# 		re='[0-9]'
-# 		while [ $validinput = false ]; do
-# 			if [[ "$seriesnumber" =~ $re ]]; then
-# 				validinput=true # only if yes continue
-# 			else
-# 				printf "%s" "Enter numbers only to continue: "
-# 				read -r seriesnumber
-# 			fi
-# 		done
-# 		;;
-
-# 	esac
-# }
-
-
-### check input function ###
-# validateInput () {
-# 	local validinput=false # assume invalid input
-	
-# 	echo "\$1 is: $1" # regex - WORKING
-# 	echo "\$2 is: $2"
-# 	echo "\$3 is: $3"
-# 	echo "\$3 is: ""${variableName}"
-# 	echo "\$4 is: $4" # reply text - WORKING
-
-# 	re="$1" # regex - WORKING
-# 	textToValidate="$2" # variable text to validate
-# 	variableName="$3" # variable name
-# 	retryText="$4" # reply text - WORKING
-
-# 	echo $variableName
-
-# 	while [ $validinput = false ]; do
-# 		if [[ "$3""$variableName" =~ $re ]]; then
-# 			echo "matches"
-# 			validinput=true # only if yes continue
-# 			production=$textToValidate
-# 		else
-# 			printf "%s" "$retryText"
-# 			read -r production
-# 		fi
-# 	done
-# }
-
 printf "%s" "Enter the production initials (e.g. TB): "
 read -r production
-validateInput "${!production@}"
-# validateInput "[a-zA-Z]" "$production" "${!production@}" "Enter letters only to continue: " # maybe need [a-z,A-Z] with comma ?
 printf "%s" "Enter the series number (e.g. 20 for series 20): "
 read -r seriesnumber
 validateInput "${!seriesnumber@}"
-# validateInput '[0-9]' "$seriesnumber" "${!seriesnumber@}" "Enter numbers only to continue: "
 printf "%s" "Enter how many episodes: "
 read -r episodes
 validateInput "${!episodes@}"
-# validateInput '[0-9]' "$episodes" "${!episodes@}" "Enter numbers only to continue: "
-
-
-
-# for var in production seriesnumber episodes ; do
-#     echo $var ${!var}
-# done
-
-
 
 ### BINS ###
 
@@ -305,8 +165,9 @@ if [[ NEEDEDBINS -gt AVAILABLEBINS ]]; then
 		printf "%s" "only $((PROJECTSWITHUNIQUEBINS)) projects"
 	fi
 
-	printf "%s\n" " will have completely unique bins. "
-
+	printf "%s" " will have completely unique bins. "
+	
+	# tell the user how many extra bins they need
 	printf "%s" "In order to avoid this, add $((MISSINGBINS)) more "
 
 	if [[ $MISSINGBINS == 1 ]]; then
@@ -343,22 +204,15 @@ for (( i=1; i <= episodes; i++ )) do
 
 	while IFS= read -r -d '' path
 	do
-		# $path - the path being considered from 'find' - e.g. ./project-template/!!!*prod*series_EP*episode_SCREENINGS
-		# capture the last part of the path after "./project-template" to process
-		# [[ $path =~ \.\/project-template(.*) ]] # gets assigned to global variable BASH_REMATCH
-		# truncPath=${BASH_REMATCH[1]} # storing the last part of the path
+		# truncate the path to only include the parts that will copy - e.g. ./project-template/!!!*prod*series_EP*episode_SCREENINGS
 		truncPath=${path:18} # Parameter Expansion - https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html
 
-		# run path through pattern replacements for variables
-		# If pattern begins with ‘/’, all matches of pattern are replaced.
-		# If the nocasematch shell option (see the description of shopt in The Shopt Builtin) is enabled, the match is performed without regard to the case of alphabetic characters
-		# More info on pattern matching https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html
+		# replace parts of the path with the production, series, and episodes
 		truncPath="${truncPath//\*series/$seriesnumber}" # replace series
 		truncPath="${truncPath//\*episode/$currentEpisode}" # replace episode
 		truncPath="${truncPath//\*prod/$production}" # replace production
 
 		# build destination path with destination root folder and renamed path
-		# printf "Trunc Path:\t%s\n" "$truncPath" # prints file or folder
 		destPath="$destRootFolder""$truncPath"
 
 		# If path is a file
@@ -396,17 +250,3 @@ for (( i=1; i <= episodes; i++ )) do
 		fi
 	done <   <(find ./project-template -print0)
 done
-
-##### TEMPORARY CODE #####
-
-# create checks for all three input variables
-# while [ "$continuescript" != "n" ] && [ "$continuescript" != "y" ]
-# do
-# 	read -rp "Enter a 'y' or 'n' only: " continuescript
-# done
-
-# pat='[^0-9]+([0-9]+)'
-# s='I am a string with some digits 1024'
-# [[ $s =~ $pat ]] # $pat must be unquoted
-# echo "${BASH_REMATCH[0]}" # The full string
-# echo "${BASH_REMATCH[1]}" # the part extracted with regex
